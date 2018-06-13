@@ -1,6 +1,7 @@
 # log4go
-在[alecthomas/log4go](github.com/alecthomas/log4go)基础上改的。操作傻瓜了些。
-##使用说明
+在[alecthomas/log4go](github.com/alecthomas/log4go)基础上改的。感谢作者。
+
+## 使用说明
   在example/example.go可以看到例子。
   ```go
   package main
