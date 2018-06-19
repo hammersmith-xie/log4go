@@ -22,8 +22,9 @@ func LoadConfiguration(filename string) {
 	Global.LoadConfiguration(filename)
 }
 
-func InitFileLogWriter(name string, path string) {
-	Global.initFileLogWriter(name,path)
+func InitFileLogWriter(name string, path string)(error) {
+	err:=Global.initFileLogWriter(name,path)
+	return err
 }
 
 
