@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"errors"
 )
 
 type xmlProperty struct {
@@ -196,7 +197,7 @@ func xmlToFileLogWriter(filename string, filepath string,props []xmlProperty, en
 
 
 
-func (log Logger)initFileLogWriter(name string, path string){
+func (log Logger)initFileLogWriter(name string, path string)(error){
 	filename:="test"
 	filepath:=""
 	if len(name) != 0{
@@ -209,24 +210,29 @@ func (log Logger)initFileLogWriter(name string, path string){
 	var lvl Level
 	var file string
 	good:=true
+	var errstr string
 	filt, good,file = defaultFileLogWriter(filename+".sys."+time.Now().Format("2006-01-02")+".log",filepath)
 	if !good {
-		os.Exit(1)
+		errstr="can't create log file:"+filepath+filename+".sys."+time.Now().Format("2006-01-02")+".log"
+		return errors.New(errstr)
 	}
 	lvl=INFO
 	log[file] = &Filter{lvl, filt}
 	filt, good,file = defaultFileLogWriter(filename+".run."+time.Now().Format("2006-01-02")+".log",filepath)
 	if !good {
-		os.Exit(1)
+		errstr="can't create log file:"+filepath+filename+".run."+time.Now().Format("2006-01-02")+".log"
+		return errors.New(errstr)
 	}
 	lvl=FINEST
 	log[file] = &Filter{lvl, filt}
 	filt, good,file = defaultFileLogWriter(filename+".err."+time.Now().Format("2006-01-02")+".log",filepath)
 	if !good {
-		os.Exit(1)
+		errstr="can't create log file:"+filepath+filename+".err."+time.Now().Format("2006-01-02")+".log"
+		return errors.New(errstr)
 	}
 	lvl=ERROR
 	log[file] = &Filter{lvl, filt}
+	return nil
 }
 
 
@@ -245,6 +251,9 @@ func defaultFileLogWriter(filename string, filepath string) (*FileLogWriter, boo
 	}
 
 	flw := NewFileLogWriter(file, rotate)
+	if flw == nil{
+		return nil,false,file
+	}
 	fmt.Println("file:[%s]",file)
 	flw.SetFormat(format)
 	flw.SetRotateLines(maxlines)
