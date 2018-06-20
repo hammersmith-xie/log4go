@@ -241,7 +241,7 @@ func defaultFileLogWriter(filename string, filepath string) (*FileLogWriter, boo
 	file := filepath+filename
 	format := "[%D %T] [%L] (%S) %M"
 	maxlines := 100000000
-	maxsize := 10000000000
+	maxsize := 2100000000
 	daily := true
 	rotate := false
 
