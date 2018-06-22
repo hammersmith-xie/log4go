@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"flag"
+	"os/exec"
 )
 
 var (
@@ -22,9 +24,28 @@ func LoadConfiguration(filename string) {
 	Global.LoadConfiguration(filename)
 }
 
-func InitFileLogWriter(name string, path string,islog bool)(error) {
-	err:=Global.initFileLogWriter(name,path,islog)
-	return err
+func InitFileLogWriter(name string, path string)(error) {
+	var godaemon= flag.Bool("d", false, "daemon or not")
+	if !flag.Parsed() {
+		flag.Parse()
+	}
+	if os.Getppid() != 1 {
+		if *godaemon {
+			cmd := exec.Command(os.Args[0])
+			cmd.Start()
+			*godaemon = false
+			/* when  cmd has start()  it makes no difference trying yo change stdio stdout stderr
+*
+*/
+			os.Exit(0)
+		}
+		err:=Global.initFileLogWriter(name,path,false)
+		return err
+	}else{
+		err:=Global.initFileLogWriter(name,path,true)
+		return err
+	}
+	return nil
 }
 
 
