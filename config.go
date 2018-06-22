@@ -186,7 +186,7 @@ func xmlToFileLogWriter(filename string, filepath string,props []xmlProperty, en
 	if !enabled {
 		return nil, true, file
 	}
-	flw := NewFileLogWriter(file, rotate)
+	flw := NewFileLogWriter(file, rotate,true)
 	fmt.Println("file:[%s]",file)
 	flw.SetFormat(format)
 	flw.SetRotateLines(maxlines)
@@ -197,7 +197,7 @@ func xmlToFileLogWriter(filename string, filepath string,props []xmlProperty, en
 
 
 
-func (log Logger)initFileLogWriter(name string, path string)(error){
+func (log Logger)initFileLogWriter(name string, path string,islog bool)(error){
 	filename:="test"
 	filepath:=""
 	if len(name) != 0{
@@ -206,26 +206,35 @@ func (log Logger)initFileLogWriter(name string, path string)(error){
 	if len(path) != 0{
 		filepath=path
 	}
+
+	strpath:=&[]string{}
+	splitpath(filepath,strpath)
+	for _,v:=range *strpath{
+		fmt.Printf("%s\n",v)
+	}
+	CreateDir(*strpath)
+
+
 	var filt LogWriter
 	var lvl Level
 	var file string
 	good:=true
 	var errstr string
-	filt, good,file = defaultFileLogWriter(filename+".sys."+time.Now().Format("2006-01-02")+".log",filepath)
+	filt, good,file = defaultFileLogWriter(filename+".sys."+time.Now().Format("2006-01-02")+".log",filepath,islog)
 	if !good {
 		errstr="can't create log file:"+filepath+filename+".sys."+time.Now().Format("2006-01-02")+".log"
 		return errors.New(errstr)
 	}
 	lvl=INFO
 	log[file] = &Filter{lvl, filt}
-	filt, good,file = defaultFileLogWriter(filename+".run."+time.Now().Format("2006-01-02")+".log",filepath)
+	filt, good,file = defaultFileLogWriter(filename+".run."+time.Now().Format("2006-01-02")+".log",filepath,islog)
 	if !good {
 		errstr="can't create log file:"+filepath+filename+".run."+time.Now().Format("2006-01-02")+".log"
 		return errors.New(errstr)
 	}
 	lvl=FINEST
 	log[file] = &Filter{lvl, filt}
-	filt, good,file = defaultFileLogWriter(filename+".err."+time.Now().Format("2006-01-02")+".log",filepath)
+	filt, good,file = defaultFileLogWriter(filename+".err."+time.Now().Format("2006-01-02")+".log",filepath,islog)
 	if !good {
 		errstr="can't create log file:"+filepath+filename+".err."+time.Now().Format("2006-01-02")+".log"
 		return errors.New(errstr)
@@ -237,11 +246,11 @@ func (log Logger)initFileLogWriter(name string, path string)(error){
 
 
 
-func defaultFileLogWriter(filename string, filepath string) (*FileLogWriter, bool, string) {
+func defaultFileLogWriter(filename string, filepath string,islog bool) (*FileLogWriter, bool, string) {
 	file := filepath+filename
 	format := "[%D %T] [%L] (%S) %M"
 	maxlines := 100000000
-	maxsize := 2100000000
+	maxsize := 10000000000
 	daily := true
 	rotate := false
 
@@ -250,7 +259,7 @@ func defaultFileLogWriter(filename string, filepath string) (*FileLogWriter, boo
 		return nil, false, file
 	}
 
-	flw := NewFileLogWriter(file, rotate)
+	flw := NewFileLogWriter(file, rotate,islog)
 	if flw == nil{
 		return nil,false,file
 	}
@@ -260,6 +269,74 @@ func defaultFileLogWriter(filename string, filepath string) (*FileLogWriter, boo
 	flw.SetRotateSize(maxsize)
 	flw.SetRotateDaily(daily)
 	return flw, true, file
+}
+
+
+
+
+func CreateDir(str []string){
+	for _,v:=range str{
+		exist, err := PathExists(v)
+		if err != nil {
+			fmt.Printf("get dir error![%v]\n", err)
+			return
+		}
+		if exist {
+			fmt.Printf("has dir![%v]\n", v)
+		} else {
+			err := os.Mkdir(v, os.ModePerm)
+			if err != nil {
+				fmt.Printf("mkdir failed![%v]\n", err)
+			}
+		}
+	}
+}
+
+
+func PathExists(path string) (bool, error) {
+	_, err := os.Stat(path)
+	if err == nil {
+		return true, nil
+	}
+	if os.IsNotExist(err) {
+		return false, nil
+	}
+	return false, err
+}
+
+func splitpath(tmpstr string,str * []string){
+	num:=-1
+	start:=strings.Index(tmpstr,"/")
+	startData:= string([]byte(tmpstr)[:start+1])
+	tmpData:= string([]byte(tmpstr)[:])
+	fmt.Printf("%s\n",startData)
+	for true {
+		startData= string([]byte(tmpData)[:start])
+		tmpData=string([]byte(tmpData)[start+1:])
+		if(num==-1) {
+			*str = append(*str, startData)
+			num++
+		}else{
+			*str = append(*str,(*str)[num]+"/"+startData)
+			num++
+		}
+		//parse
+		//writedb
+		start=strings.Index(tmpData,"/")
+		if(start == -1){
+			startData=tmpData
+			if(num==-1) {
+				*str = append(*str, startData)
+				num++
+			}else{
+				*str = append(*str,(*str)[num]+"/"+startData)
+				num++
+			}
+			//parse
+			//writedb
+			break
+		}
+	}
 }
 
 

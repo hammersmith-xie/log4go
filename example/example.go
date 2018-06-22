@@ -6,7 +6,7 @@ import(
 )
 
 func main(){
-	l4g.InitFileLogWriter("gateway","log/")
+	l4g.InitFileLogWriter("gateway","log/",true)
 	l4g.Finest("songshiqi")
 	l4g.Error("3Oh no!  %d + %d = %d!", 2, 2, 2+2)
 
