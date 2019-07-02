@@ -80,6 +80,7 @@ func NewFileLogWriter(fname string, rotate bool,islog bool) *FileLogWriter {
 		go func() {
 			defer func() {
 				if w.file != nil {
+					w.JudgeFile()
 					fmt.Fprint(w.file, FormatLogRecord(w.trailer, &LogRecord{Created: time.Now()}))
 					w.file.Close()
 				}
@@ -110,6 +111,7 @@ func NewFileLogWriter(fname string, rotate bool,islog bool) *FileLogWriter {
 							return
 						}
 					}
+					w.JudgeFile()
 					n, err := fmt.Fprint(w.file, FormatLogRecord(w.format, rec))
 					if err != nil {
 						fmt.Fprintf(os.Stderr, "FileLogWriter(%q): %s\n", w.filename, err)
@@ -142,6 +144,32 @@ func NewFileLogWriter(fname string, rotate bool,islog bool) *FileLogWriter {
 	}
 	return w
 }
+
+
+func (w *FileLogWriter) JudgeFile(){
+	_, err := os.Lstat(w.filename)
+	if err == nil{
+		fd, err := os.OpenFile(w.filename, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0660)
+		if err != nil {
+			fmt.Printf("%s openfile filed:%s\n",w.filename,err)
+			return
+		}
+		w.file = fd
+
+		fmt.Printf("w.filename:%s\n",w.filename)
+
+		now := time.Now()
+		fmt.Fprint(w.file, FormatLogRecord(w.header, &LogRecord{Created: now}))
+
+		// Set the daily open date to the current date
+		w.daily_opendate = now.Day()
+
+		// initialize rotation values
+		w.maxlines_curlines = 0
+		w.maxsize_cursize = 0
+	}
+}
+
 
 // Request that the logs rotate
 func (w *FileLogWriter) Rotate() {
@@ -245,17 +273,17 @@ func (w *FileLogWriter) intRotateByDay() error {
 		w.file.Close()
 	}
 	// If we are keeping log files, move it to the next available number
-		_, err := os.Lstat(w.filename)
-		if err == nil { // file exists
+		//_, err := os.Lstat(w.filename)
+		//if err == nil { // file exists
 			fname := ""
 			yesterday := time.Now().AddDate(0, 0, 0).Format("2006-01-02")
-			var isexis bool
+			//var isexis bool
 			for {
 				name:=&[]string{}
 				split(w.filename,name)
 				fname = (*name)[0] +"."+(*name)[1]+fmt.Sprintf(".%s%s", yesterday, path.Ext(w.filename))
 				w.maxbackup = 0
-				isexis, err = w.PathExists(fname)
+				isexis, err := w.PathExists(fname)
 				if err != nil {
 					return fmt.Errorf("PathExists: %s\n", err)
 				}
@@ -272,7 +300,7 @@ func (w *FileLogWriter) intRotateByDay() error {
 				fmt.Printf("Rename err: %s\n", err)
 				return fmt.Errorf("Rotate: %s\n", err)
 			}*/
-		}
+		//}
 
 	// Open the log file
 	fd, err := os.OpenFile(w.filename, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0660)
