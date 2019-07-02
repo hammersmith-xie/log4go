@@ -148,7 +148,7 @@ func NewFileLogWriter(fname string, rotate bool,islog bool) *FileLogWriter {
 
 func (w *FileLogWriter) JudgeFile(){
 	_, err := os.Lstat(w.filename)
-	if err == nil{
+	if err != nil{
 		fd, err := os.OpenFile(w.filename, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0660)
 		if err != nil {
 			fmt.Printf("%s openfile filed:%s\n",w.filename,err)
