@@ -154,6 +154,7 @@ func (w *FileLogWriter) JudgeFile(){
 			fmt.Printf("%s openfile filed:%s\n",w.filename,err)
 			return
 		}
+		
 		w.file = fd
 
 		fmt.Printf("w.filename:%s\n",w.filename)
