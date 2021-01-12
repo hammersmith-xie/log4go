@@ -71,7 +71,7 @@ func NewFileLogWriter(fname string, rotate bool,islog bool) *FileLogWriter {
 		maxbackup: 0,
 	}
 	// open the file for the first time
-	if islog {
+	if true {
 		if err := w.intRotate(false); err != nil {
 			fmt.Fprintf(os.Stderr, "FileLogWriter(%q): %s\n", w.filename, err)
 			return nil
@@ -113,6 +113,7 @@ func NewFileLogWriter(fname string, rotate bool,islog bool) *FileLogWriter {
 					}
 					w.JudgeFile()
 					n, err := fmt.Fprint(w.file, FormatLogRecord(w.format, rec))
+					fmt.Printf("%s",FormatLogRecord(w.format, rec))
 					if err != nil {
 						fmt.Fprintf(os.Stderr, "FileLogWriter(%q): %s\n", w.filename, err)
 						return
